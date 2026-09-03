@@ -41,7 +41,7 @@
     input,textarea,select{width:100%;border:1px solid #293240;background:#0b1017;color:var(--text);border-radius:12px;padding:11px 12px;outline:none;transition:.16s;border-color:.16s,box-shadow:.16s}
     input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,140,255,.12)} textarea{min-height:88px;resize:vertical}
     .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#0a0e14;padding:5px;border:1px solid var(--line);border-radius:14px}.seg button{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800}.seg button.active{background:var(--blue);color:#fff}
-    .docnumber{font-size:28px;font-weight:900;letter-spacing:-.03em;margin:12px 0 2px}.sub{color:var(--muted);font-size:12px}
+    .docnumber{font-size:28px;font-weight:900;letter-spacing:-.03em;margin:12px 0 2px;width:100%;background:var(--input,#090d12);color:var(--text,#f5f7fa);border:1px solid var(--line,#252c36);border-radius:12px;padding:10px 12px;box-sizing:border-box}.sub{color:var(--muted);font-size:12px}
     .btns{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid #2a3442;background:#141a23;color:var(--text);padding:11px 14px;border-radius:12px;font-weight:800}.btn:hover{background:#19212c}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn.primary:hover{background:#5b98ff}.btn.danger{color:#ff9ca4;border-color:#563038}.btn.ghost{background:transparent}.btn.small{padding:8px 10px;font-size:12px}.btn:disabled{opacity:.45;cursor:not-allowed}
     .position-head,.position-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px 112px 104px 40px;gap:8px;align-items:center}.position-head{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:0 4px 7px}.position-row{padding:9px;border:1px solid var(--line);border-radius:14px;background:#0c1118;margin-bottom:8px}.position-row input{padding:9px 10px}.position-row .sum{text-align:right;font-weight:800;font-size:13px}.iconbtn{border:0;background:transparent;color:#7f8a99;font-size:18px;border-radius:9px;height:36px}.iconbtn:hover{background:#25161a;color:var(--danger)}
     .totals{margin-left:auto;max-width:410px;margin-top:16px;border-top:1px solid var(--line);padding-top:10px}.trow{display:flex;justify-content:space-between;gap:20px;padding:6px 0;color:var(--muted)}.trow strong{color:var(--text)}.trow.grand{font-size:19px;padding-top:11px;border-top:1px dashed #303a49;margin-top:6px}.trow.grand span,.trow.grand strong{color:#fff}
@@ -75,8 +75,9 @@
         <div class="card">
           <h2>Dokument</h2>
           <div class="seg"><button id="typeInvoice" class="active">Rechnung</button><button id="typeOffer">Angebot</button></div>
-          <div id="docNumber" class="docnumber">RE260901</div>
-          <div class="sub">Nummer wird automatisch nach Jahr, Monat und laufender Nummer vergeben.</div>
+          <label for="docNumber" style="display:block;margin-top:14px">Rechnungs-/Angebotsnummer</label>
+          <input id="docNumber" class="docnumber" value="RE260901" autocomplete="off" spellcheck="false">
+          <div class="sub">Frei editierbar. Die eingegebene Nummer wird für PDF, Dateiname und Archiv übernommen.</div>
           <div class="fields" style="margin-top:16px">
             <div class="field"><label>Dokumentdatum</label><input id="docDate" type="date"></div>
             <div class="field"><label>Leistungs-/Lieferdatum</label><input id="serviceDate" type="date"></div>
@@ -241,9 +242,15 @@
     return stem+String(seq).padStart(2,'0');
   }
 
+  function suggestedNumber(type=docType, dateStr=$('#docDate').value){
+    const d=new Date((dateStr||todayISO())+'T12:00:00');
+    const yy=String(d.getFullYear()).slice(-2), mm=String(d.getMonth()+1).padStart(2,'0');
+    return (type==='invoice'?'RE':'AN')+yy+mm+'01';
+  }
+
   function refreshNumber(force=false){
-    if(force || !currentNumber || !currentNumber.startsWith((docType==='invoice'?'RE':'AN')+($('#docDate').value||todayISO()).slice(2,4)+($('#docDate').value||todayISO()).slice(5,7))) currentNumber=nextNumber(docType,$('#docDate').value);
-    $('#docNumber').textContent=currentNumber;
+    if(force || !currentNumber) currentNumber=suggestedNumber();
+    if($('#docNumber') && $('#docNumber').value!==currentNumber) $('#docNumber').value=currentNumber;
   }
 
   function addPosition(data={description:'',qty:1,price:0}){
@@ -445,7 +452,7 @@ endstream`});
   }
 
   function loadArchived(d,convert){
-    setType(convert?'invoice':d.type,false); currentNumber=convert?nextNumber('invoice',todayISO()):d.number; $('#docDate').value=convert?todayISO():d.date; $('#serviceDate').value=d.serviceDate||$('#docDate').value; $('#subject').value=d.subject||'';
+    setType(convert?'invoice':d.type,false); currentNumber=convert?suggestedNumber('invoice',todayISO()):d.number; $('#docDate').value=convert?todayISO():d.date; $('#serviceDate').value=d.serviceDate||$('#docDate').value; $('#subject').value=d.subject||'';
     $('#customerName').value=d.customer?.name||'';$('#customerContact').value=d.customer?.contact||'';$('#customerStreet').value=d.customer?.street||'';$('#customerCity').value=d.customer?.city||'';$('#customerEmail').value=d.customer?.email||'';$('#customerNo').value=d.customer?.no||'';
     positions=(d.positions||[]).map(p=>({...p,id:crypto.randomUUID?.()||String(Math.random())})); if(!positions.length)addPosition(); $('#paypal').value=d.settings?.paypal??settings().paypal??''; $('#showPaypal').checked=!!(d.settings?.showPaypal); $('#discount').value=d.discount||0;$('#discountType').value=d.discountType||'percent';$('#shipping').value=d.shipping||0;$('#paymentDays').value=d.paymentDays??10;$('#paymentMode').value=d.paymentMode||'days';$('#validDays').value=d.validDays??14;$('#paymentText').value=convert?'':(d.paymentText||'');$('#introText').value=d.intro||'';$('#closingText').value=d.closing||'';$('#internalNote').value=d.internalNote||'';
     renderPositions(); refreshNumber(); updateAll(); switchTab('document'); toast(convert?'Angebot in neue Rechnung übernommen':'Dokument geladen');
@@ -459,7 +466,7 @@ endstream`});
   function loadSettings(){ const s=settings(); Object.entries(s).forEach(([k,v])=>{const el=$('#'+k);if(!el)return;if(el.type==='checkbox')el.checked=!!v;else el.value=v??''}); }
   function saveSettings(){ const existing=settings(), s={}; Object.keys(defaultSettings).forEach(k=>{const el=$('#'+k);s[k]=el? (el.type==='checkbox'?el.checked:el.value) : existing[k]}); localStorage.setItem(STORAGE.settings,JSON.stringify(s)); preview();toast('Einstellungen gespeichert'); }
 
-  function setType(type,resetNumber=true){docType=type;$('#typeInvoice').classList.toggle('active',type==='invoice');$('#typeOffer').classList.toggle('active',type==='offer');if(resetNumber)currentNumber='';refreshNumber();updateAll();}
+  function setType(type,resetNumber=true){docType=type;$('#typeInvoice').classList.toggle('active',type==='invoice');$('#typeOffer').classList.toggle('active',type==='offer');if(resetNumber)currentNumber=suggestedNumber(type,$('#docDate').value);refreshNumber();updateAll();}
   function switchTab(name){ $$('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name)); $$('.panel').forEach(x=>x.classList.remove('active')); $('#'+name+'Panel').classList.add('active'); if(name==='preview')preview(); if(name==='archive')renderArchive(); }
   function updateAll(){updateTotals();refreshNumber();preview();saveDraft();}
   function newDocument(){
@@ -469,7 +476,9 @@ endstream`});
 
   $$('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab)); $('#typeInvoice').onclick=()=>setType('invoice');$('#typeOffer').onclick=()=>setType('offer');$('#addPosition').onclick=()=>addPosition();$('#createPdfBtn').onclick=()=>generatePdf(true);$('#sharePdfBtn').onclick=sharePdf;$('#newDocBtn').onclick=newDocument;$('#saveSettings').onclick=saveSettings;
   $('#clearArchive').onclick=()=>{if(confirm('Wirklich das gesamte lokale Dokumenten-Archiv löschen?')){setArchive([]);renderArchive();refreshNumber(true)}};
-  ['docDate','serviceDate','subject','customerName','customerContact','customerStreet','customerCity','customerEmail','customerNo','paymentDays','paymentMode','validDays','paymentText','discount','discountType','shipping','introText','closingText','internalNote','paypal','showPaypal'].forEach(id=>$('#'+id).addEventListener('input',()=>{if(id==='docDate')currentNumber='';updateAll()}));
+  $('#docNumber').addEventListener('input',e=>{currentNumber=e.target.value.trim();preview();saveDraft();});
+  $('#docNumber').addEventListener('change',e=>{currentNumber=e.target.value.trim();if(!currentNumber){currentNumber=suggestedNumber();refreshNumber();}updateAll();});
+  ['docDate','serviceDate','subject','customerName','customerContact','customerStreet','customerCity','customerEmail','customerNo','paymentDays','paymentMode','validDays','paymentText','discount','discountType','shipping','introText','closingText','internalNote','paypal','showPaypal'].forEach(id=>$('#'+id).addEventListener('input',()=>{updateAll()}));
 
   loadSettings(); const hadDraft=loadDraft(); if(!$('#docDate').value)$('#docDate').value=todayISO();if(!$('#serviceDate').value)$('#serviceDate').value=todayISO();if(!hadDraft){const st=settings();$('#paypal').value=st.paypal||'';$('#showPaypal').checked=!!st.showPaypal;$('#introText').value='Vielen Dank für Ihren Auftrag. Für die ausgeführten Leistungen berechne ich wie folgt:';$('#paymentDays').value=10;$('#validDays').value=14;}
   if(!positions.length)positions=[{id:crypto.randomUUID?.()||'p1',description:'',qty:1,price:0}]; setType(docType,false);renderPositions();refreshNumber();renderArchive();preview();
