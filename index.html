@@ -192,8 +192,6 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 <script>
 (() => {
   const $ = s => document.querySelector(s);
@@ -301,28 +299,168 @@
       <div class="paper-footer">${esc(d.paymentText)}${d.closing?`<div style="margin-top:13px">${esc(d.closing).replace(/\n/g,'<br>')}</div>`:''}${tax}<div style="margin-top:26px;border-top:1px solid #ddd;padding-top:12px">${esc(s.bankName)} · IBAN: ${esc(s.iban)} · BIC: ${esc(s.bic)}<br>${esc(s.companyName)} · ${esc(s.ownerName)} · ${esc(s.companyEmail)} · ${esc(s.companyWeb)}</div></div>`;
   }
 
-  function pdfSafe(s=''){ return String(s).replace(/[–—]/g,'-').replace(/€/g,'EUR'); }
+  function pdfSafe(s=''){ return String(s).replace(/[–—]/g,'-'); }
+
+  // Kleine, eigenständige PDF-Engine. Keine externe Bibliothek / kein CDN nötig.
   function makePdfBlob(){
-    if(!window.jspdf?.jsPDF) throw new Error('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');
-    refreshNumber(); const d=getData(), s=d.settings, {jsPDF}=window.jspdf; const pdf=new jsPDF({unit:'mm',format:'a4'}); const W=210, left=18, right=192;
-    pdf.setFillColor(20,20,20); pdf.roundedRect(left,15,22,22,4,4,'F'); pdf.setTextColor(255); pdf.setFont('helvetica','bold'); pdf.setFontSize(13); pdf.text('SW',29,29,{align:'center'});
-    pdf.setTextColor(25); pdf.setFontSize(11); pdf.setFont('helvetica','bold'); pdf.text(pdfSafe(s.companyName),right,17,{align:'right'});
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); let cy=22; [s.ownerName,s.companyStreet,s.companyCity,'',s.companyEmail,s.companyWeb].forEach(line=>{pdf.text(pdfSafe(line||''),right,cy,{align:'right'});cy+=4.2});
-    pdf.setDrawColor(20); pdf.setLineWidth(.8); pdf.line(left,43,right,43); pdf.setFontSize(6.8); pdf.setTextColor(100); pdf.text(pdfSafe(`${s.companyName} · ${s.companyStreet} · ${s.companyCity}`),left,49);
-    pdf.setTextColor(30); pdf.setFontSize(9.5); let y=58; [d.customer.name,d.customer.contact,d.customer.street,d.customer.city].filter(Boolean).forEach(x=>{pdf.text(pdfSafe(x),left,y);y+=5});
-    y=Math.max(y+10,84); const title=d.type==='invoice'?'Rechnung':'Angebot'; pdf.setFont('helvetica','bold'); pdf.setFontSize(22); pdf.text(title,left,y); y+=7;
-    pdf.setFontSize(9); pdf.setFont('helvetica','normal'); pdf.setTextColor(90); let meta=`${d.number} · Datum: ${fmtDate(d.date)}`; if(s.showServiceDate&&d.serviceDate)meta+=` · Leistungs-/Lieferdatum: ${fmtDate(d.serviceDate)}`; pdf.text(pdfSafe(meta),left,y); y+=7;
-    if(d.subject){pdf.setTextColor(35);pdf.setFont('helvetica','bold');pdf.text('Betreff:',left,y);pdf.setFont('helvetica','normal');pdf.text(pdfSafe(d.subject),left+14,y);y+=7}
-    if(d.intro){pdf.setTextColor(35);pdf.setFontSize(9);const lines=pdf.splitTextToSize(pdfSafe(d.intro),174);pdf.text(lines,left,y);y+=lines.length*4.2+3}
-    const body=d.positions.map((p,i)=>[`${i+1}. ${pdfSafe(p.description||'Position')}`,String(p.qty).replace('.',','),euro(p.price),euro(p.qty*p.price)]);
-    pdf.autoTable({startY:y,margin:{left,right:18},head:[['Pos. / Beschreibung','Menge','Einzelpreis','Gesamt']],body,theme:'plain',styles:{font:'helvetica',fontSize:8.5,cellPadding:2.6,textColor:[35,35,35]},headStyles:{fontStyle:'bold',textColor:[20,20,20],lineColor:[20,20,20],lineWidth:{bottom:.5}},columnStyles:{0:{cellWidth:92},1:{halign:'right',cellWidth:20},2:{halign:'right',cellWidth:30},3:{halign:'right',cellWidth:32}},didParseCell:data=>{if(data.section==='body')data.cell.styles.lineColor=[220,220,220],data.cell.styles.lineWidth={bottom:.15}}});
-    y=pdf.lastAutoTable.finalY+7; const tx=118, vx=192; pdf.setFontSize(9); pdf.setTextColor(80); const totalLine=(label,val,bold=false)=>{pdf.setFont('helvetica',bold?'bold':'normal');pdf.setTextColor(bold?20:80);pdf.text(label,tx,y);pdf.text(pdfSafe(val),vx,y,{align:'right'});y+=5.2};
-    totalLine('Zwischensumme',euro(d.totals.subtotal)); if(d.totals.discount)totalLine('Rabatt','- '+euro(d.totals.discount)); if(d.totals.shipping)totalLine('Versand / Zusatzkosten',euro(d.totals.shipping)); pdf.setDrawColor(30);pdf.line(tx,y-1,vx,y-1);y+=2;totalLine('Gesamtbetrag',euro(d.totals.total),true);
-    y+=9; pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);pdf.setTextColor(45); const paymentLines=pdf.splitTextToSize(pdfSafe(d.paymentText),174);pdf.text(paymentLines,left,y);y+=paymentLines.length*4+3;
-    if(d.closing){const lines=pdf.splitTextToSize(pdfSafe(d.closing),174);pdf.text(lines,left,y);y+=lines.length*4+3}
-    if(s.smallBusiness){pdf.text('Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.',left,y);y+=5}
-    const footerY=276;pdf.setDrawColor(210);pdf.line(left,footerY-8,right,footerY-8);pdf.setFontSize(7.5);pdf.setTextColor(80);pdf.text(pdfSafe(`${s.bankName} · IBAN: ${s.iban} · BIC: ${s.bic}`),left,footerY-2);pdf.text(pdfSafe(`${s.companyName} · ${s.ownerName} · ${s.companyEmail} · ${s.companyWeb}${s.taxNo?' · Steuernr.: '+s.taxNo:''}`),left,footerY+3);
-    return pdf.output('blob');
+    refreshNumber();
+    const d=getData(), s=d.settings;
+    const PT=72/25.4, PAGE_W=210, PAGE_H=297;
+    const mm=v=>v*PT, ypt=v=>(PAGE_H-v)*PT;
+
+    const cp1252={
+      '€':0x80,'‚':0x82,'ƒ':0x83,'„':0x84,'…':0x85,'†':0x86,'‡':0x87,'ˆ':0x88,'‰':0x89,'Š':0x8A,'‹':0x8B,'Œ':0x8C,
+      'Ž':0x8E,'‘':0x91,'’':0x92,'“':0x93,'”':0x94,'•':0x95,'-':0x2D,'˜':0x98,'™':0x99,'š':0x9A,'›':0x9B,'œ':0x9C,'ž':0x9E,'Ÿ':0x9F
+    };
+    const byteChar=ch=>{
+      const code=ch.charCodeAt(0);
+      if(code<=255) return String.fromCharCode(code);
+      if(cp1252[ch]!=null) return String.fromCharCode(cp1252[ch]);
+      return '?';
+    };
+    const bin=s=>Array.from(String(s),byteChar).join('');
+    const lit=s=>bin(pdfSafe(s)).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[\r\n]+/g,' ');
+    const approxWidth=(text,size)=>Array.from(String(text)).length*size*.49;
+    const wrap=(text,size,maxWidth)=>{
+      const out=[];
+      String(text||'').split(/\n/).forEach(par=>{
+        const words=par.trim().split(/\s+/).filter(Boolean);
+        if(!words.length){out.push('');return}
+        let line='';
+        words.forEach(word=>{
+          const test=line?line+' '+word:word;
+          if(line && approxWidth(test,size)>maxWidth){out.push(line);line=word}else line=test;
+        });
+        if(line)out.push(line);
+      });
+      return out.length?out:[''];
+    };
+
+    const pages=[];
+    let cmds=[];
+    const addPage=()=>{ if(cmds.length)pages.push(cmds.join('\n')); cmds=[]; };
+    const setStroke=(g=.8)=>cmds.push(`${g} G`);
+    const setFill=(g=.1)=>cmds.push(`${g} g`);
+    const line=(x1,y1,x2,y2,w=.3)=>cmds.push(`${w} w ${mm(x1).toFixed(2)} ${ypt(y1).toFixed(2)} m ${mm(x2).toFixed(2)} ${ypt(y2).toFixed(2)} l S`);
+    const rect=(x,y,w,h,fill=.08)=>cmds.push(`q ${fill} g ${mm(x).toFixed(2)} ${ypt(y+h).toFixed(2)} ${mm(w).toFixed(2)} ${mm(h).toFixed(2)} re f Q`);
+    const text=(txt,x,y,size=9,bold=false,align='left')=>{
+      txt=String(txt??'');
+      let xp=mm(x);
+      if(align==='right') xp-=approxWidth(txt,size);
+      else if(align==='center') xp-=approxWidth(txt,size)/2;
+      cmds.push(`BT /${bold?'F2':'F1'} ${size} Tf ${xp.toFixed(2)} ${ypt(y).toFixed(2)} Td (${lit(txt)}) Tj ET`);
+    };
+    const textLines=(lines,x,y,size=9,bold=false,lineMm=4,maxY=260)=>{
+      let yy=y;
+      for(const ln of lines){ if(yy>maxY)break; text(ln,x,yy,size,bold); yy+=lineMm; }
+      return yy;
+    };
+
+    function documentHeader(pageNo=1, continuation=false){
+      rect(18,15,22,22,.08); setFill(1); text('SW',29,29,13,true,'center'); setFill(.1);
+      text(s.companyName,192,17,11,true,'right');
+      let cy=22; [s.ownerName,s.companyStreet,s.companyCity,'',s.companyEmail,s.companyWeb].forEach(v=>{text(v||'',192,cy,8.5,false,'right');cy+=4.2});
+      setStroke(.12); line(18,43,192,43,.8); text(`${s.companyName} · ${s.companyStreet} · ${s.companyCity}`,18,49,6.8);
+      if(continuation){
+        text(`${d.type==='invoice'?'Rechnung':'Angebot'} ${d.number} - Fortsetzung`,18,59,12,true);
+        text(`Seite ${pageNo}`,192,59,8,false,'right');
+        return 68;
+      }
+      let yy=58;
+      [d.customer.name,d.customer.contact,d.customer.street,d.customer.city].filter(Boolean).forEach(v=>{text(v,18,yy,9.5);yy+=5});
+      yy=Math.max(yy+10,84);
+      text(d.type==='invoice'?'Rechnung':'Angebot',18,yy,22,true); yy+=7;
+      let meta=`${d.number} · Datum: ${fmtDate(d.date)}`;
+      if(s.showServiceDate&&d.serviceDate)meta+=` · Leistungs-/Lieferdatum: ${fmtDate(d.serviceDate)}`;
+      if(s.taxNo)meta+=` · Steuernr.: ${s.taxNo}`;
+      text(meta,18,yy,8.6); yy+=7;
+      if(d.subject){text('Betreff:',18,yy,9,true); const sl=wrap(d.subject,9,mm(155)); if(sl.length){text(sl[0],32,yy,9)} yy+=7;}
+      if(d.intro){const ls=wrap(d.intro,9,mm(174)); yy=textLines(ls,18,yy,9,false,4.2,220)+3;}
+      return yy;
+    }
+
+    function tableHead(y){
+      text('Pos. / Beschreibung',18,y,8.2,true); text('Menge',128,y,8.2,true,'right'); text('Einzelpreis',158,y,8.2,true,'right'); text('Gesamt',192,y,8.2,true,'right');
+      line(18,y+2,192,y+2,.55); return y+7;
+    }
+
+    let pageNo=1;
+    let y=documentHeader(pageNo,false);
+    y=tableHead(y);
+    const bottomLimit=238;
+    d.positions.forEach((p,i)=>{
+      const desc=wrap(`${i+1}. ${p.description||'Position'}`,8.4,mm(91));
+      const rowH=Math.max(7,desc.length*4.1+2);
+      if(y+rowH>bottomLimit){
+        addPage(); pageNo++; y=documentHeader(pageNo,true); y=tableHead(y);
+      }
+      desc.forEach((ln,j)=>text(ln,18,y+j*4.1,8.4));
+      text(String(p.qty).replace('.',','),128,y,8.4,false,'right');
+      text(euro(p.price),158,y,8.4,false,'right');
+      text(euro(p.qty*p.price),192,y,8.4,false,'right');
+      y+=rowH; line(18,y-2,192,y-2,.15);
+    });
+
+    const totalsHeight=36;
+    if(y+totalsHeight>bottomLimit){addPage();pageNo++;y=documentHeader(pageNo,true);}
+    y+=5;
+    const totalLine=(label,val,bold=false)=>{text(label,118,y,9,bold);text(val,192,y,9,bold,'right');y+=5.2};
+    totalLine('Zwischensumme',euro(d.totals.subtotal));
+    if(d.totals.discount)totalLine('Rabatt','- '+euro(d.totals.discount));
+    if(d.totals.shipping)totalLine('Versand / Zusatzkosten',euro(d.totals.shipping));
+    line(118,y-1,192,y-1,.45);y+=2;totalLine('Gesamtbetrag',euro(d.totals.total),true);
+    y+=8;
+
+    const footerText=[];
+    if(d.paymentText) footerText.push(...wrap(d.paymentText,8.5,mm(174)));
+    if(d.closing){footerText.push('');footerText.push(...wrap(d.closing,8.5,mm(174)));}
+    if(s.smallBusiness){footerText.push('');footerText.push('Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.');}
+    for(const ln of footerText){
+      if(y>250){addPage();pageNo++;y=documentHeader(pageNo,true);}
+      text(ln,18,y,8.5); y+=4;
+    }
+
+    // Fußzeile auf jeder Seite direkt vor dem Finalisieren ergänzen.
+    const current=cmds; addPage();
+    const finalized=pages.map((content,idx)=>{
+      const footer=[];
+      const ft=(txt,x,yy,size=7.3,align='left')=>{
+        let xp=mm(x); if(align==='right')xp-=approxWidth(txt,size);
+        footer.push(`BT /F1 ${size} Tf ${xp.toFixed(2)} ${ypt(yy).toFixed(2)} Td (${lit(txt)}) Tj ET`);
+      };
+      footer.push(`${.82} G`,`${.25} w ${mm(18).toFixed(2)} ${ypt(268).toFixed(2)} m ${mm(192).toFixed(2)} ${ypt(268).toFixed(2)} l S`);
+      ft(`${s.bankName} · IBAN: ${s.iban} · BIC: ${s.bic}`,18,274);
+      ft(`${s.companyName} · ${s.ownerName} · ${s.companyEmail} · ${s.companyWeb}${s.taxNo?' · Steuernr.: '+s.taxNo:''}`,18,279,7.1);
+      ft(`Seite ${idx+1} / ${pages.length}`,192,279,7.1,'right');
+      return content+'\n'+footer.join('\n');
+    });
+
+    // PDF-Dateistruktur zusammenbauen (WinAnsi / Helvetica).
+    const objects=[];
+    objects[1]='<< /Type /Catalog /Pages 2 0 R >>';
+    const pageIds=[];
+    objects[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+    objects[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+    finalized.forEach((content,i)=>{
+      const pageId=5+i*2, contentId=pageId+1; pageIds.push(pageId);
+      objects[pageId]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${mm(210).toFixed(2)} ${mm(297).toFixed(2)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentId} 0 R >>`;
+      const b=bin(content);
+      objects[contentId]=`<< /Length ${b.length} >>\nstream\n${b}\nendstream`;
+    });
+    objects[2]=`<< /Type /Pages /Count ${pageIds.length} /Kids [${pageIds.map(id=>`${id} 0 R`).join(' ')}] >>`;
+
+    let pdf='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', offsets=[0];
+    for(let i=1;i<objects.length;i++){
+      if(!objects[i])continue;
+      offsets[i]=pdf.length;
+      pdf+=`${i} 0 obj\n${objects[i]}\nendobj\n`;
+    }
+    const xref=pdf.length;
+    pdf+=`xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+    for(let i=1;i<objects.length;i++) pdf+=`${String(offsets[i]||0).padStart(10,'0')} 00000 n \n`;
+    pdf+=`trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    const bytes=new Uint8Array(pdf.length); for(let i=0;i<pdf.length;i++)bytes[i]=pdf.charCodeAt(i)&255;
+    return new Blob([bytes],{type:'application/pdf'});
   }
 
   function saveToArchive(){
