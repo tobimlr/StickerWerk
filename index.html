@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#080b10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SW Office" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>StickerWerk Office</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#07090d; --bg2:#0b0f15; --card:#10151d; --card2:#151b24;
+      --line:#252d39; --text:#f4f7fb; --muted:#8f9aaa; --blue:#4a8cff;
+      --blue2:#70a4ff; --danger:#ff5f6d; --ok:#59d18a; --shadow:0 18px 50px rgba(0,0,0,.30);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg)}
+    body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:
+      radial-gradient(circle at 12% -10%,rgba(74,140,255,.15),transparent 26rem),
+      radial-gradient(circle at 105% 20%,rgba(74,140,255,.07),transparent 24rem),var(--bg);color:var(--text)}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:1180px;margin:0 auto;padding:22px 18px 80px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}.brandmark{width:46px;height:46px;border-radius:14px;background:linear-gradient(145deg,#3e7df0,#77a9ff);display:grid;place-items:center;color:white;font-weight:900;letter-spacing:-.06em;box-shadow:0 10px 30px rgba(74,140,255,.26)}
+    .brand h1{font-size:18px;margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+    .badge{border:1px solid var(--line);background:rgba(16,21,29,.8);padding:8px 11px;border-radius:999px;color:var(--muted);font-size:12px}
+    .tabs{display:flex;gap:8px;overflow:auto;padding:4px;margin:0 0 16px;background:#0b0f15;border:1px solid var(--line);border-radius:16px;position:sticky;top:8px;z-index:20;backdrop-filter:blur(16px)}
+    .tab{border:0;background:transparent;color:var(--muted);padding:10px 14px;border-radius:12px;white-space:nowrap;font-weight:700}.tab.active{background:var(--card2);color:var(--text);box-shadow:inset 0 0 0 1px #2a3341}
+    .panel{display:none}.panel.active{display:block}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.stack{display:grid;gap:16px}
+    .card{background:linear-gradient(180deg,rgba(18,24,33,.97),rgba(14,19,27,.97));border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .card h2{font-size:15px;margin:0 0 14px}.card h3{font-size:13px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.08em}
+    .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field.full{grid-column:1/-1}
+    label{display:block;color:var(--muted);font-size:11px;font-weight:750;margin:0 0 6px;text-transform:uppercase;letter-spacing:.055em}
+    input,textarea,select{width:100%;border:1px solid #293240;background:#0b1017;color:var(--text);border-radius:12px;padding:11px 12px;outline:none;transition:.16s;border-color:.16s,box-shadow:.16s}
+    input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,140,255,.12)} textarea{min-height:88px;resize:vertical}
+    .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#0a0e14;padding:5px;border:1px solid var(--line);border-radius:14px}.seg button{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800}.seg button.active{background:var(--blue);color:#fff}
+    .docnumber{font-size:28px;font-weight:900;letter-spacing:-.03em;margin:12px 0 2px}.sub{color:var(--muted);font-size:12px}
+    .btns{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid #2a3442;background:#141a23;color:var(--text);padding:11px 14px;border-radius:12px;font-weight:800}.btn:hover{background:#19212c}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn.primary:hover{background:#5b98ff}.btn.danger{color:#ff9ca4;border-color:#563038}.btn.ghost{background:transparent}.btn.small{padding:8px 10px;font-size:12px}.btn:disabled{opacity:.45;cursor:not-allowed}
+    .position-head,.position-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px 112px 104px 40px;gap:8px;align-items:center}.position-head{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:0 4px 7px}.position-row{padding:9px;border:1px solid var(--line);border-radius:14px;background:#0c1118;margin-bottom:8px}.position-row input{padding:9px 10px}.position-row .sum{text-align:right;font-weight:800;font-size:13px}.iconbtn{border:0;background:transparent;color:#7f8a99;font-size:18px;border-radius:9px;height:36px}.iconbtn:hover{background:#25161a;color:var(--danger)}
+    .totals{margin-left:auto;max-width:410px;margin-top:16px;border-top:1px solid var(--line);padding-top:10px}.trow{display:flex;justify-content:space-between;gap:20px;padding:6px 0;color:var(--muted)}.trow strong{color:var(--text)}.trow.grand{font-size:19px;padding-top:11px;border-top:1px dashed #303a49;margin-top:6px}.trow.grand span,.trow.grand strong{color:#fff}
+    .switchrow{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.switchrow:last-child{border-bottom:0}.switchrow p{margin:2px 0;color:var(--muted);font-size:12px}.switch{position:relative;width:48px;height:28px;flex:none}.switch input{opacity:0;position:absolute}.slider{position:absolute;inset:0;background:#27303d;border-radius:999px;transition:.18s}.slider:after{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.18s}.switch input:checked+.slider{background:var(--blue)}.switch input:checked+.slider:after{transform:translateX(20px)}
+    .hint{border:1px solid rgba(74,140,255,.25);background:rgba(74,140,255,.07);border-radius:14px;padding:12px 13px;color:#b7ccf3;font-size:12px;line-height:1.5}
+    .preview-wrap{background:#262b33;border-radius:16px;padding:14px;overflow:auto}.paper{background:#fff;color:#111;max-width:794px;min-height:1123px;margin:auto;padding:54px 58px;box-shadow:0 18px 50px rgba(0,0,0,.35);font-family:Arial,sans-serif}.paper-header{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.paper-logo{width:70px;height:70px;border-radius:16px;background:#111;color:white;display:grid;place-items:center;font-size:27px;font-weight:900}.paper-company{text-align:right;font-size:12px;line-height:1.55;color:#444}.paper-rule{height:3px;background:#111;margin:24px 0 32px}.paper-small{font-size:10px;color:#555}.paper h1{font-size:29px;margin:40px 0 5px}.paper .meta{font-size:12px;color:#555;margin-bottom:26px}.paper-customer{font-size:13px;line-height:1.55;min-height:80px}.paper table{width:100%;border-collapse:collapse;margin-top:24px;font-size:12px}.paper th{text-align:left;border-bottom:2px solid #111;padding:8px 6px}.paper td{padding:9px 6px;border-bottom:1px solid #ddd;vertical-align:top}.paper th:nth-child(n+2),.paper td:nth-child(n+2){text-align:right}.paper-total{width:47%;margin:18px 0 0 auto;font-size:12px}.paper-total div{display:flex;justify-content:space-between;padding:5px 0}.paper-total .grand{border-top:2px solid #111;margin-top:5px;padding-top:8px;font-size:15px;font-weight:800}.paper-footer{margin-top:42px;font-size:11px;line-height:1.55;color:#333}.archive-list{display:grid;gap:9px}.archive-item{display:grid;grid-template-columns:1fr auto;gap:14px;padding:13px;border:1px solid var(--line);border-radius:14px;background:#0c1118}.archive-item strong{display:block;font-size:13px}.archive-item p{margin:4px 0 0;color:var(--muted);font-size:12px}.empty{padding:34px 14px;text-align:center;color:var(--muted);border:1px dashed #2a3442;border-radius:14px}
+    .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:#f7f9fc;color:#111;padding:11px 15px;border-radius:12px;box-shadow:0 15px 35px rgba(0,0,0,.4);font-weight:800;font-size:12px;opacity:0;pointer-events:none;transition:.22s;z-index:100}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:850px){.grid{grid-template-columns:1fr}.position-head{display:none}.position-row{grid-template-columns:1fr 72px 108px 40px}.position-row .sum{grid-column:2/4;text-align:right}.fields{grid-template-columns:1fr 1fr}.paper{min-width:690px}.topbar .badge{display:none}}
+    @media(max-width:540px){.app{padding:14px 10px 80px}.card{padding:14px;border-radius:16px}.fields{grid-template-columns:1fr}.field.full{grid-column:auto}.position-row{grid-template-columns:1fr 66px 96px 36px}.tabs{top:4px}.docnumber{font-size:24px}.btn{flex:1 1 auto}.btns .btn.primary{flex-basis:100%}}
+    @media print{body{background:#fff}.app>*:not(#previewPanel){display:none!important}#previewPanel{display:block!important}.preview-wrap{padding:0;background:#fff}.paper{box-shadow:none;max-width:none;min-height:auto;padding:15mm}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><div class="brandmark">SW</div><div><h1>StickerWerk Office</h1><p>Angebote & Rechnungen</p></div></div>
+    <div class="badge">Daten bleiben lokal auf diesem Gerät</div>
+  </div>
+
+  <nav class="tabs" aria-label="Bereiche">
+    <button class="tab active" data-tab="document">Dokument</button>
+    <button class="tab" data-tab="payment">Zahlung & Gültigkeit</button>
+    <button class="tab" data-tab="preview">Vorschau</button>
+    <button class="tab" data-tab="archive">Archiv</button>
+    <button class="tab" data-tab="settings">Einstellungen</button>
+  </nav>
+
+  <section id="documentPanel" class="panel active">
+    <div class="grid">
+      <div class="stack">
+        <div class="card">
+          <h2>Dokument</h2>
+          <div class="seg"><button id="typeInvoice" class="active">Rechnung</button><button id="typeOffer">Angebot</button></div>
+          <div id="docNumber" class="docnumber">RE260901</div>
+          <div class="sub">Nummer wird automatisch nach Jahr, Monat und laufender Nummer vergeben.</div>
+          <div class="fields" style="margin-top:16px">
+            <div class="field"><label>Dokumentdatum</label><input id="docDate" type="date"></div>
+            <div class="field"><label>Leistungs-/Lieferdatum</label><input id="serviceDate" type="date"></div>
+            <div class="field full"><label>Betreff / Projekt</label><input id="subject" placeholder="z. B. Fahrzeugbeschriftung BMW M4"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Kunde</h2>
+          <div class="fields">
+            <div class="field full"><label>Firma / Name</label><input id="customerName" placeholder="Max Mustermann"></div>
+            <div class="field full"><label>Ansprechpartner</label><input id="customerContact" placeholder="optional"></div>
+            <div class="field"><label>Straße & Hausnummer</label><input id="customerStreet"></div>
+            <div class="field"><label>PLZ & Ort</label><input id="customerCity"></div>
+            <div class="field"><label>E-Mail</label><input id="customerEmail" type="email"></div>
+            <div class="field"><label>Kundennummer</label><input id="customerNo" placeholder="optional"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Schnellaktionen</h2>
+        <div class="btns">
+          <button class="btn primary" id="createPdfBtn">PDF erstellen</button>
+          <button class="btn" id="sharePdfBtn">PDF teilen</button>
+          <button class="btn" id="newDocBtn">Neues Dokument</button>
+        </div>
+        <div class="hint" style="margin-top:14px">Auf iPhone/iPad nutzt <b>PDF teilen</b> nach Möglichkeit das iOS-Teilen-Menü. Damit kannst du das Dokument direkt an WhatsApp, Mail, AirDrop oder „Dateien“ übergeben.</div>
+        <h3>Notizen</h3>
+        <label>Interne Notiz</label><textarea id="internalNote" placeholder="Wird nicht auf das PDF gedruckt"></textarea>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Positionen</h2>
+      <div class="position-head"><span>Beschreibung</span><span>Menge</span><span>Einzelpreis</span><span>Gesamt</span><span></span></div>
+      <div id="positions"></div>
+      <button class="btn small" id="addPosition">+ Position hinzufügen</button>
+      <div class="totals">
+        <div class="trow"><span>Zwischensumme</span><strong id="subtotal">0,00 €</strong></div>
+        <div class="trow" id="discountTotalRow"><span>Rabatt</span><strong id="discountValue">0,00 €</strong></div>
+        <div class="trow" id="shippingTotalRow"><span>Versand / Zusatzkosten</span><strong id="shippingValue">0,00 €</strong></div>
+        <div class="trow grand"><span>Gesamt</span><strong id="grandTotal">0,00 €</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="paymentPanel" class="panel">
+    <div class="grid">
+      <div class="card">
+        <h2>Zahlungsziel & Angebotsgültigkeit</h2>
+        <div class="fields">
+          <div class="field"><label>Zahlungsziel Rechnung</label><input id="paymentDays" type="number" min="0" step="1" value="10"></div>
+          <div class="field"><label>Einheit</label><select id="paymentMode"><option value="days">Tage ab Rechnungsdatum</option><option value="immediate">Sofort fällig</option></select></div>
+          <div class="field"><label>Angebot gültig für</label><input id="validDays" type="number" min="0" step="1" value="14"></div>
+          <div class="field"><label>Einheit</label><select disabled><option>Tage ab Angebotsdatum</option></select></div>
+        </div>
+        <div class="hint" style="margin-top:14px">Standardmäßig sind <b>10 Tage Zahlungsziel</b> eingestellt. Diese Angabe gehört zum aktuellen Dokument und kann bei jedem Auftrag unabhängig geändert werden.</div>
+        <h3>Eigener Zahlungstext</h3>
+        <textarea id="paymentText" placeholder="Optional. Leer lassen für automatischen Standardtext."></textarea>
+      </div>
+
+      <div class="card">
+        <h2>Preisoptionen</h2>
+        <div class="fields">
+          <div class="field"><label>Rabatt</label><input id="discount" type="number" min="0" step="0.01" value="0"></div>
+          <div class="field"><label>Rabatt-Art</label><select id="discountType"><option value="percent">%</option><option value="fixed">€</option></select></div>
+          <div class="field"><label>Versand / Zusatzkosten</label><input id="shipping" type="number" min="0" step="0.01" value="0"></div>
+          <div class="field"><label>Währung</label><select id="currency"><option value="EUR">EUR (€)</option></select></div>
+        </div>
+        <h3>Texte auf dem Dokument</h3>
+        <label>Einleitung</label><textarea id="introText"></textarea>
+        <label style="margin-top:12px">Schlusstext</label><textarea id="closingText"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section id="previewPanel" class="panel">
+    <div class="card"><h2>PDF-Vorschau</h2><div class="preview-wrap"><div class="paper" id="paperPreview"></div></div></div>
+  </section>
+
+  <section id="archivePanel" class="panel">
+    <div class="card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px"><h2 style="margin:0">Dokumenten-Archiv</h2><button class="btn small danger" id="clearArchive">Archiv leeren</button></div><div id="archiveList" class="archive-list"></div></div>
+  </section>
+
+  <section id="settingsPanel" class="panel">
+    <div class="grid">
+      <div class="card">
+        <h2>Firmendaten</h2>
+        <div class="fields">
+          <div class="field full"><label>Firmenname</label><input id="companyName" value="StickerWerk"></div>
+          <div class="field full"><label>Inhaber / Name</label><input id="ownerName" value="Tobias Müller"></div>
+          <div class="field"><label>Straße</label><input id="companyStreet" value="Mittenheimerstr 23c"></div>
+          <div class="field"><label>PLZ & Ort</label><input id="companyCity" value="85764 Oberschleißheim"></div>
+          <div class="field"><label>E-Mail</label><input id="companyEmail" value="info@stickerwerk.net"></div>
+          <div class="field"><label>Internet</label><input id="companyWeb" value="stickerwerk.net"></div>
+          <div class="field"><label>Steuernummer</label><input id="taxNo" placeholder="optional eintragen"></div>
+          <div class="field"><label>Telefon</label><input id="companyPhone" placeholder="optional"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Bank & Hinweise</h2>
+        <div class="fields">
+          <div class="field full"><label>Bank</label><input id="bankName" value="N26 Bank"></div>
+          <div class="field full"><label>IBAN</label><input id="iban" value="DE35 1001 1001 2051 4163 91"></div>
+          <div class="field full"><label>BIC</label><input id="bic" value="NTSDEB1XXX"></div>
+        </div>
+        <div class="switchrow"><div><strong>Kleinunternehmer-Hinweis</strong><p>Fügt den §19-UStG-Hinweis auf dem PDF ein.</p></div><label class="switch"><input id="smallBusiness" type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="switchrow"><div><strong>Leistungsdatum anzeigen</strong><p>Kann bei Bedarf im Dokument ausgeblendet werden.</p></div><label class="switch"><input id="showServiceDate" type="checkbox" checked><span class="slider"></span></label></div>
+        <button class="btn" id="saveSettings" style="margin-top:14px">Einstellungen speichern</button>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const STORAGE = { settings:'swOfficeSettingsV1', archive:'swOfficeArchiveV1', draft:'swOfficeDraftV1' };
+  let docType = 'invoice';
+  let positions = [];
+  let lastPdfBlob = null;
+  let lastPdfName = '';
+  let currentNumber = '';
+
+  const defaultSettings = {
+    companyName:'StickerWerk', ownerName:'Tobias Müller', companyStreet:'Mittenheimerstr 23c', companyCity:'85764 Oberschleißheim',
+    companyEmail:'info@stickerwerk.net', companyWeb:'stickerwerk.net', companyPhone:'', taxNo:'', bankName:'N26 Bank',
+    iban:'DE35 1001 1001 2051 4163 91', bic:'NTSDEB1XXX', smallBusiness:true, showServiceDate:true
+  };
+
+  function todayISO(){ const d=new Date(); const o=d.getTimezoneOffset(); return new Date(d-o*60000).toISOString().slice(0,10); }
+  function fmtDate(v){ if(!v) return ''; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
+  function euro(n){ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0); }
+  function n(v){ return Math.max(0, Number(String(v).replace(',','.')) || 0); }
+  function esc(s=''){ return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('show'),2200); }
+  function addDays(dateStr,days){ const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+Number(days||0)); return d.toISOString().slice(0,10); }
+
+  function settings(){ const raw=localStorage.getItem(STORAGE.settings); return {...defaultSettings,...(raw?JSON.parse(raw):{})}; }
+  function archive(){ try{return JSON.parse(localStorage.getItem(STORAGE.archive)||'[]')}catch{return []} }
+  function setArchive(a){ localStorage.setItem(STORAGE.archive,JSON.stringify(a)); }
+
+  function nextNumber(type, dateStr){
+    const d = new Date((dateStr||todayISO())+'T12:00:00');
+    const yy=String(d.getFullYear()).slice(-2), mm=String(d.getMonth()+1).padStart(2,'0'), prefix=type==='invoice'?'RE':'AN';
+    const stem=prefix+yy+mm;
+    const nums=archive().filter(x=>x.number?.startsWith(stem)).map(x=>Number(x.number.slice(-2))).filter(Number.isFinite);
+    let seq=(nums.length?Math.max(...nums):0)+1;
+    if(seq>99) seq=99;
+    return stem+String(seq).padStart(2,'0');
+  }
+
+  function refreshNumber(force=false){
+    if(force || !currentNumber || !currentNumber.startsWith((docType==='invoice'?'RE':'AN')+($('#docDate').value||todayISO()).slice(2,4)+($('#docDate').value||todayISO()).slice(5,7))) currentNumber=nextNumber(docType,$('#docDate').value);
+    $('#docNumber').textContent=currentNumber;
+  }
+
+  function addPosition(data={description:'',qty:1,price:0}){
+    positions.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),description:data.description||'',qty:n(data.qty)||1,price:n(data.price)});
+    renderPositions(); saveDraft();
+  }
+  function renderPositions(){
+    const box=$('#positions'); box.innerHTML='';
+    positions.forEach((p,i)=>{
+      const row=document.createElement('div'); row.className='position-row'; row.dataset.id=p.id;
+      row.innerHTML=`<input class="pdesc" aria-label="Beschreibung" placeholder="Beschreibung / Leistung" value="${esc(p.description)}"><input class="pqty" aria-label="Menge" type="number" min="0" step="0.01" value="${p.qty}"><input class="pprice" aria-label="Einzelpreis" type="number" min="0" step="0.01" value="${p.price}"><div class="sum">${euro(p.qty*p.price)}</div><button class="iconbtn" title="Position löschen" aria-label="Position löschen">×</button>`;
+      row.querySelector('.pdesc').addEventListener('input',e=>{p.description=e.target.value; updateAll();});
+      row.querySelector('.pqty').addEventListener('input',e=>{p.qty=n(e.target.value); updateAll();});
+      row.querySelector('.pprice').addEventListener('input',e=>{p.price=n(e.target.value); updateAll();});
+      row.querySelector('.iconbtn').onclick=()=>{positions.splice(i,1); if(!positions.length)addPosition(); else renderPositions(); updateAll();};
+      box.appendChild(row);
+    });
+    updateTotals();
+  }
+  function calc(){ const subtotal=positions.reduce((s,p)=>s+p.qty*p.price,0); const dv=n($('#discount').value); const discount=$('#discountType').value==='percent'?subtotal*Math.min(dv,100)/100:Math.min(dv,subtotal); const shipping=n($('#shipping').value); return {subtotal,discount,shipping,total:Math.max(0,subtotal-discount+shipping)}; }
+  function updateTotals(){
+    $$('.position-row').forEach((r,i)=>{if(positions[i])r.querySelector('.sum').textContent=euro(positions[i].qty*positions[i].price)});
+    const c=calc(); $('#subtotal').textContent=euro(c.subtotal); $('#discountValue').textContent='- '+euro(c.discount); $('#shippingValue').textContent=euro(c.shipping); $('#grandTotal').textContent=euro(c.total);
+    $('#discountTotalRow').style.display=c.discount?'flex':'none'; $('#shippingTotalRow').style.display=c.shipping?'flex':'none';
+  }
+
+  function automaticPaymentText(){
+    if(docType==='invoice'){
+      if($('#paymentMode').value==='immediate') return 'Der Rechnungsbetrag ist sofort ohne Abzug fällig.';
+      const days=Math.max(0,parseInt($('#paymentDays').value)||0); const due=addDays($('#docDate').value||todayISO(),days);
+      return `Bitte überweisen Sie den Rechnungsbetrag innerhalb von ${days} Tagen, spätestens bis zum ${fmtDate(due)}, ohne Abzug.`;
+    }
+    const days=Math.max(0,parseInt($('#validDays').value)||0); const due=addDays($('#docDate').value||todayISO(),days);
+    return `Dieses Angebot ist ${days} Tage gültig, bis einschließlich ${fmtDate(due)}.`;
+  }
+
+  function getData(){
+    const s=settings(), c=calc();
+    return {type:docType, number:currentNumber, date:$('#docDate').value, serviceDate:$('#serviceDate').value, subject:$('#subject').value.trim(),
+      customer:{name:$('#customerName').value.trim(),contact:$('#customerContact').value.trim(),street:$('#customerStreet').value.trim(),city:$('#customerCity').value.trim(),email:$('#customerEmail').value.trim(),no:$('#customerNo').value.trim()},
+      positions:positions.map(p=>({...p})), totals:c, discountType:$('#discountType').value, discount:n($('#discount').value), shipping:n($('#shipping').value),
+      paymentDays:n($('#paymentDays').value), paymentMode:$('#paymentMode').value, validDays:n($('#validDays').value), paymentText:$('#paymentText').value.trim()||automaticPaymentText(),
+      intro:$('#introText').value.trim(), closing:$('#closingText').value.trim(), internalNote:$('#internalNote').value.trim(), settings:s};
+  }
+
+  function preview(){
+    const d=getData(), s=d.settings, title=d.type==='invoice'?'Rechnung':'Angebot';
+    const customer=[d.customer.name,d.customer.contact,d.customer.street,d.customer.city].filter(Boolean).map(esc).join('<br>') || '<span style="color:#999">Kundendaten</span>';
+    const intro=d.intro?`<p style="font-size:12px;line-height:1.55;margin:14px 0">${esc(d.intro).replace(/\n/g,'<br>')}</p>`:'';
+    const rows=d.positions.map((p,i)=>`<tr><td>${i+1}. ${esc(p.description)||'Position'}</td><td>${String(p.qty).replace('.',',')}</td><td>${euro(p.price)}</td><td>${euro(p.qty*p.price)}</td></tr>`).join('');
+    const disc=d.totals.discount?`<div><span>Rabatt</span><span>- ${euro(d.totals.discount)}</span></div>`:'';
+    const ship=d.totals.shipping?`<div><span>Versand / Zusatzkosten</span><span>${euro(d.totals.shipping)}</span></div>`:'';
+    const tax=s.smallBusiness?`<div style="margin-top:13px">Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</div>`:'';
+    const service=s.showServiceDate&&d.serviceDate?` · Leistungs-/Lieferdatum: ${fmtDate(d.serviceDate)}`:'';
+    const taxNo=s.taxNo?` · Steuernr.: ${esc(s.taxNo)}`:'';
+    $('#paperPreview').innerHTML=`
+      <div class="paper-header"><div class="paper-logo">SW</div><div class="paper-company"><b>${esc(s.companyName)}</b><br>${esc(s.ownerName)}<br>${esc(s.companyStreet)}<br>${esc(s.companyCity)}<br><br>${esc(s.companyEmail)}<br>${esc(s.companyWeb)}</div></div>
+      <div class="paper-rule"></div><div class="paper-small">${esc(s.companyName)} · ${esc(s.companyStreet)} · ${esc(s.companyCity)}</div>
+      <div class="paper-customer">${customer}</div><h1>${title}</h1><div class="meta"><b>${esc(d.number)}</b> · Datum: ${fmtDate(d.date)}${service}${taxNo}</div>
+      ${d.subject?`<div style="font-size:13px"><b>Betreff:</b> ${esc(d.subject)}</div>`:''}${intro}
+      <table><thead><tr><th>Pos. / Beschreibung</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="paper-total"><div><span>Zwischensumme</span><span>${euro(d.totals.subtotal)}</span></div>${disc}${ship}<div class="grand"><span>Gesamtbetrag</span><span>${euro(d.totals.total)}</span></div></div>
+      <div class="paper-footer">${esc(d.paymentText)}${d.closing?`<div style="margin-top:13px">${esc(d.closing).replace(/\n/g,'<br>')}</div>`:''}${tax}<div style="margin-top:26px;border-top:1px solid #ddd;padding-top:12px">${esc(s.bankName)} · IBAN: ${esc(s.iban)} · BIC: ${esc(s.bic)}<br>${esc(s.companyName)} · ${esc(s.ownerName)} · ${esc(s.companyEmail)} · ${esc(s.companyWeb)}</div></div>`;
+  }
+
+  function pdfSafe(s=''){ return String(s).replace(/[–—]/g,'-').replace(/€/g,'EUR'); }
+  function makePdfBlob(){
+    if(!window.jspdf?.jsPDF) throw new Error('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');
+    refreshNumber(); const d=getData(), s=d.settings, {jsPDF}=window.jspdf; const pdf=new jsPDF({unit:'mm',format:'a4'}); const W=210, left=18, right=192;
+    pdf.setFillColor(20,20,20); pdf.roundedRect(left,15,22,22,4,4,'F'); pdf.setTextColor(255); pdf.setFont('helvetica','bold'); pdf.setFontSize(13); pdf.text('SW',29,29,{align:'center'});
+    pdf.setTextColor(25); pdf.setFontSize(11); pdf.setFont('helvetica','bold'); pdf.text(pdfSafe(s.companyName),right,17,{align:'right'});
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); let cy=22; [s.ownerName,s.companyStreet,s.companyCity,'',s.companyEmail,s.companyWeb].forEach(line=>{pdf.text(pdfSafe(line||''),right,cy,{align:'right'});cy+=4.2});
+    pdf.setDrawColor(20); pdf.setLineWidth(.8); pdf.line(left,43,right,43); pdf.setFontSize(6.8); pdf.setTextColor(100); pdf.text(pdfSafe(`${s.companyName} · ${s.companyStreet} · ${s.companyCity}`),left,49);
+    pdf.setTextColor(30); pdf.setFontSize(9.5); let y=58; [d.customer.name,d.customer.contact,d.customer.street,d.customer.city].filter(Boolean).forEach(x=>{pdf.text(pdfSafe(x),left,y);y+=5});
+    y=Math.max(y+10,84); const title=d.type==='invoice'?'Rechnung':'Angebot'; pdf.setFont('helvetica','bold'); pdf.setFontSize(22); pdf.text(title,left,y); y+=7;
+    pdf.setFontSize(9); pdf.setFont('helvetica','normal'); pdf.setTextColor(90); let meta=`${d.number} · Datum: ${fmtDate(d.date)}`; if(s.showServiceDate&&d.serviceDate)meta+=` · Leistungs-/Lieferdatum: ${fmtDate(d.serviceDate)}`; pdf.text(pdfSafe(meta),left,y); y+=7;
+    if(d.subject){pdf.setTextColor(35);pdf.setFont('helvetica','bold');pdf.text('Betreff:',left,y);pdf.setFont('helvetica','normal');pdf.text(pdfSafe(d.subject),left+14,y);y+=7}
+    if(d.intro){pdf.setTextColor(35);pdf.setFontSize(9);const lines=pdf.splitTextToSize(pdfSafe(d.intro),174);pdf.text(lines,left,y);y+=lines.length*4.2+3}
+    const body=d.positions.map((p,i)=>[`${i+1}. ${pdfSafe(p.description||'Position')}`,String(p.qty).replace('.',','),euro(p.price),euro(p.qty*p.price)]);
+    pdf.autoTable({startY:y,margin:{left,right:18},head:[['Pos. / Beschreibung','Menge','Einzelpreis','Gesamt']],body,theme:'plain',styles:{font:'helvetica',fontSize:8.5,cellPadding:2.6,textColor:[35,35,35]},headStyles:{fontStyle:'bold',textColor:[20,20,20],lineColor:[20,20,20],lineWidth:{bottom:.5}},columnStyles:{0:{cellWidth:92},1:{halign:'right',cellWidth:20},2:{halign:'right',cellWidth:30},3:{halign:'right',cellWidth:32}},didParseCell:data=>{if(data.section==='body')data.cell.styles.lineColor=[220,220,220],data.cell.styles.lineWidth={bottom:.15}}});
+    y=pdf.lastAutoTable.finalY+7; const tx=118, vx=192; pdf.setFontSize(9); pdf.setTextColor(80); const totalLine=(label,val,bold=false)=>{pdf.setFont('helvetica',bold?'bold':'normal');pdf.setTextColor(bold?20:80);pdf.text(label,tx,y);pdf.text(pdfSafe(val),vx,y,{align:'right'});y+=5.2};
+    totalLine('Zwischensumme',euro(d.totals.subtotal)); if(d.totals.discount)totalLine('Rabatt','- '+euro(d.totals.discount)); if(d.totals.shipping)totalLine('Versand / Zusatzkosten',euro(d.totals.shipping)); pdf.setDrawColor(30);pdf.line(tx,y-1,vx,y-1);y+=2;totalLine('Gesamtbetrag',euro(d.totals.total),true);
+    y+=9; pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);pdf.setTextColor(45); const paymentLines=pdf.splitTextToSize(pdfSafe(d.paymentText),174);pdf.text(paymentLines,left,y);y+=paymentLines.length*4+3;
+    if(d.closing){const lines=pdf.splitTextToSize(pdfSafe(d.closing),174);pdf.text(lines,left,y);y+=lines.length*4+3}
+    if(s.smallBusiness){pdf.text('Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.',left,y);y+=5}
+    const footerY=276;pdf.setDrawColor(210);pdf.line(left,footerY-8,right,footerY-8);pdf.setFontSize(7.5);pdf.setTextColor(80);pdf.text(pdfSafe(`${s.bankName} · IBAN: ${s.iban} · BIC: ${s.bic}`),left,footerY-2);pdf.text(pdfSafe(`${s.companyName} · ${s.ownerName} · ${s.companyEmail} · ${s.companyWeb}${s.taxNo?' · Steuernr.: '+s.taxNo:''}`),left,footerY+3);
+    return pdf.output('blob');
+  }
+
+  function saveToArchive(){
+    const d=getData(); const a=archive(); const idx=a.findIndex(x=>x.number===d.number); const item={...d, savedAt:new Date().toISOString()}; if(idx>=0)a[idx]=item;else a.unshift(item); setArchive(a); renderArchive();
+  }
+  function filename(){ const customer=$('#customerName').value.trim().replace(/[^a-zA-Z0-9äöüÄÖÜß_-]+/g,'_').replace(/^_+|_+$/g,''); return `${currentNumber}${customer?'_'+customer:''}.pdf`; }
+  function downloadBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500)}
+  function generatePdf(download=true){ try{lastPdfBlob=makePdfBlob();lastPdfName=filename();saveToArchive();if(download)downloadBlob(lastPdfBlob,lastPdfName);toast(download?'PDF erstellt & archiviert':'PDF vorbereitet');return true}catch(e){alert(e.message);return false} }
+
+  async function sharePdf(){
+    if(!generatePdf(false))return; const file=new File([lastPdfBlob],lastPdfName,{type:'application/pdf'});
+    if(navigator.canShare?.({files:[file]}) && navigator.share){try{await navigator.share({files:[file],title:lastPdfName});return}catch(e){if(e.name==='AbortError')return}}
+    downloadBlob(lastPdfBlob,lastPdfName); toast('Teilen nicht verfügbar - PDF wurde heruntergeladen');
+  }
+
+  function renderArchive(){
+    const a=archive(), box=$('#archiveList'); if(!a.length){box.innerHTML='<div class="empty">Noch keine Dokumente archiviert.</div>';return}
+    box.innerHTML=a.map((x,i)=>`<div class="archive-item"><div><strong>${esc(x.number)} · ${esc(x.customer?.name||'Ohne Kundenname')}</strong><p>${x.type==='invoice'?'Rechnung':'Angebot'} · ${fmtDate(x.date)} · ${euro(x.totals?.total||0)}</p></div><div class="btns"><button class="btn small" data-load="${i}">Öffnen</button>${x.type==='offer'?`<button class="btn small" data-convert="${i}">→ Rechnung</button>`:''}<button class="btn small danger" data-delete="${i}">×</button></div></div>`).join('');
+    $$('[data-load]').forEach(b=>b.onclick=()=>loadArchived(a[+b.dataset.load],false));
+    $$('[data-convert]').forEach(b=>b.onclick=()=>loadArchived(a[+b.dataset.convert],true));
+    $$('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('Dokument aus dem lokalen Archiv löschen?')){a.splice(+b.dataset.delete,1);setArchive(a);renderArchive();}});
+  }
+
+  function loadArchived(d,convert){
+    setType(convert?'invoice':d.type,false); currentNumber=convert?nextNumber('invoice',todayISO()):d.number; $('#docDate').value=convert?todayISO():d.date; $('#serviceDate').value=d.serviceDate||$('#docDate').value; $('#subject').value=d.subject||'';
+    $('#customerName').value=d.customer?.name||'';$('#customerContact').value=d.customer?.contact||'';$('#customerStreet').value=d.customer?.street||'';$('#customerCity').value=d.customer?.city||'';$('#customerEmail').value=d.customer?.email||'';$('#customerNo').value=d.customer?.no||'';
+    positions=(d.positions||[]).map(p=>({...p,id:crypto.randomUUID?.()||String(Math.random())})); if(!positions.length)addPosition(); $('#discount').value=d.discount||0;$('#discountType').value=d.discountType||'percent';$('#shipping').value=d.shipping||0;$('#paymentDays').value=d.paymentDays??10;$('#paymentMode').value=d.paymentMode||'days';$('#validDays').value=d.validDays??14;$('#paymentText').value=convert?'':(d.paymentText||'');$('#introText').value=d.intro||'';$('#closingText').value=d.closing||'';$('#internalNote').value=d.internalNote||'';
+    renderPositions(); refreshNumber(); updateAll(); switchTab('document'); toast(convert?'Angebot in neue Rechnung übernommen':'Dokument geladen');
+  }
+
+  function saveDraft(){
+    const ids=['docDate','serviceDate','subject','customerName','customerContact','customerStreet','customerCity','customerEmail','customerNo','paymentDays','paymentMode','validDays','paymentText','discount','discountType','shipping','introText','closingText','internalNote']; const data={docType,currentNumber,positions,fields:{}};ids.forEach(id=>data.fields[id]=$('#'+id)?.value);localStorage.setItem(STORAGE.draft,JSON.stringify(data));
+  }
+  function loadDraft(){ try{const d=JSON.parse(localStorage.getItem(STORAGE.draft)||'null');if(!d)return false;docType=d.docType||'invoice';currentNumber=d.currentNumber||'';Object.entries(d.fields||{}).forEach(([id,v])=>{if($('#'+id))$('#'+id).value=v});positions=Array.isArray(d.positions)?d.positions:[];return true}catch{return false} }
+
+  function loadSettings(){ const s=settings(); Object.entries(s).forEach(([k,v])=>{const el=$('#'+k);if(!el)return;if(el.type==='checkbox')el.checked=!!v;else el.value=v??''}); }
+  function saveSettings(){ const s={}; Object.keys(defaultSettings).forEach(k=>{const el=$('#'+k);s[k]=el?.type==='checkbox'?el.checked:(el?.value??defaultSettings[k])}); localStorage.setItem(STORAGE.settings,JSON.stringify(s)); preview();toast('Einstellungen gespeichert'); }
+
+  function setType(type,resetNumber=true){docType=type;$('#typeInvoice').classList.toggle('active',type==='invoice');$('#typeOffer').classList.toggle('active',type==='offer');if(resetNumber)currentNumber='';refreshNumber();updateAll();}
+  function switchTab(name){ $$('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name)); $$('.panel').forEach(x=>x.classList.remove('active')); $('#'+name+'Panel').classList.add('active'); if(name==='preview')preview(); if(name==='archive')renderArchive(); }
+  function updateAll(){updateTotals();refreshNumber();preview();saveDraft();}
+  function newDocument(){
+    if(!confirm('Neues Dokument starten? Nicht archivierte Eingaben werden zurückgesetzt.'))return;
+    const t=docType; currentNumber=''; $('#docDate').value=todayISO();$('#serviceDate').value=todayISO();['subject','customerName','customerContact','customerStreet','customerCity','customerEmail','customerNo','paymentText','internalNote'].forEach(id=>$('#'+id).value='');$('#paymentDays').value=10;$('#paymentMode').value='days';$('#validDays').value=14;$('#discount').value=0;$('#shipping').value=0;$('#discountType').value='percent'; $('#introText').value=t==='invoice'?'Vielen Dank für Ihren Auftrag. Für die ausgeführten Leistungen berechne ich wie folgt:':'Vielen Dank für Ihre Anfrage. Gerne biete ich Ihnen folgende Leistungen an:';$('#closingText').value='';positions=[];addPosition();refreshNumber(true);updateAll();toast('Neues Dokument angelegt');
+  }
+
+  $$('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab)); $('#typeInvoice').onclick=()=>setType('invoice');$('#typeOffer').onclick=()=>setType('offer');$('#addPosition').onclick=()=>addPosition();$('#createPdfBtn').onclick=()=>generatePdf(true);$('#sharePdfBtn').onclick=sharePdf;$('#newDocBtn').onclick=newDocument;$('#saveSettings').onclick=saveSettings;
+  $('#clearArchive').onclick=()=>{if(confirm('Wirklich das gesamte lokale Dokumenten-Archiv löschen?')){setArchive([]);renderArchive();refreshNumber(true)}};
+  ['docDate','serviceDate','subject','customerName','customerContact','customerStreet','customerCity','customerEmail','customerNo','paymentDays','paymentMode','validDays','paymentText','discount','discountType','shipping','introText','closingText','internalNote'].forEach(id=>$('#'+id).addEventListener('input',()=>{if(id==='docDate')currentNumber='';updateAll()}));
+
+  loadSettings(); const hadDraft=loadDraft(); if(!$('#docDate').value)$('#docDate').value=todayISO();if(!$('#serviceDate').value)$('#serviceDate').value=todayISO();if(!hadDraft){$('#introText').value='Vielen Dank für Ihren Auftrag. Für die ausgeführten Leistungen berechne ich wie folgt:';$('#paymentDays').value=10;$('#validDays').value=14;}
+  if(!positions.length)positions=[{id:crypto.randomUUID?.()||'p1',description:'',qty:1,price:0}]; setType(docType,false);renderPositions();refreshNumber();renderArchive();preview();
+})();
+</script>
+</body>
+</html>
