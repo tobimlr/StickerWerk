@@ -43,7 +43,7 @@
     .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#0a0e14;padding:5px;border:1px solid var(--line);border-radius:14px}.seg button{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800}.seg button.active{background:var(--blue);color:#fff}
     .docnumber{font-size:28px;font-weight:900;letter-spacing:-.03em;margin:12px 0 2px;width:100%;background:var(--input,#090d12);color:var(--text,#f5f7fa);border:1px solid var(--line,#252c36);border-radius:12px;padding:10px 12px;box-sizing:border-box}.sub{color:var(--muted);font-size:12px}
     .btns{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid #2a3442;background:#141a23;color:var(--text);padding:11px 14px;border-radius:12px;font-weight:800}.btn:hover{background:#19212c}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn.primary:hover{background:#5b98ff}.btn.danger{color:#ff9ca4;border-color:#563038}.btn.ghost{background:transparent}.btn.small{padding:8px 10px;font-size:12px}.btn:disabled{opacity:.45;cursor:not-allowed}
-    .position-head,.position-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px 112px 104px 40px;gap:8px;align-items:center}.position-head{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:0 4px 7px}.position-row{padding:9px;border:1px solid var(--line);border-radius:14px;background:#0c1118;margin-bottom:8px}.position-row input{padding:9px 10px}.position-row .sum{text-align:right;font-weight:800;font-size:13px}.iconbtn{border:0;background:transparent;color:#7f8a99;font-size:18px;border-radius:9px;height:36px}.iconbtn:hover{background:#25161a;color:var(--danger)}
+    .position-head,.position-row{display:grid;grid-template-columns:minmax(190px,1fr) 82px 112px 104px 40px;gap:8px;align-items:center}.position-head{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:0 4px 7px}.position-row{padding:9px;border:1px solid var(--line);border-radius:14px;background:#0c1118;margin-bottom:8px}.position-row input{padding:9px 10px}.position-row .sum{text-align:right;font-weight:800;font-size:13px}.optional-row{grid-column:1/-1;display:flex;align-items:center;gap:9px;padding:2px 2px 0;color:var(--muted);font-size:12px}.optional-row input{width:18px;height:18px;accent-color:var(--blue)}.optional-badge{font-size:10px;font-weight:800;letter-spacing:.05em;border:1px solid #777;padding:1px 5px;border-radius:4px;margin-left:5px}.iconbtn{border:0;background:transparent;color:#7f8a99;font-size:18px;border-radius:9px;height:36px}.iconbtn:hover{background:#25161a;color:var(--danger)}
     .totals{margin-left:auto;max-width:410px;margin-top:16px;border-top:1px solid var(--line);padding-top:10px}.trow{display:flex;justify-content:space-between;gap:20px;padding:6px 0;color:var(--muted)}.trow strong{color:var(--text)}.trow.grand{font-size:19px;padding-top:11px;border-top:1px dashed #303a49;margin-top:6px}.trow.grand span,.trow.grand strong{color:#fff}
     .switchrow{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.switchrow:last-child{border-bottom:0}.switchrow p{margin:2px 0;color:var(--muted);font-size:12px}.switch{position:relative;width:48px;height:28px;flex:none}.switch input{opacity:0;position:absolute}.slider{position:absolute;inset:0;background:#27303d;border-radius:999px;transition:.18s}.slider:after{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.18s}.switch input:checked+.slider{background:var(--blue)}.switch input:checked+.slider:after{transform:translateX(20px)}
     .hint{border:1px solid rgba(74,140,255,.25);background:rgba(74,140,255,.07);border-radius:14px;padding:12px 13px;color:#b7ccf3;font-size:12px;line-height:1.5}
@@ -254,23 +254,24 @@
   }
 
   function addPosition(data={description:'',qty:1,price:0}){
-    positions.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),description:data.description||'',qty:n(data.qty)||1,price:n(data.price)});
+    positions.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),description:data.description||'',qty:n(data.qty)||1,price:n(data.price),optional:!!data.optional});
     renderPositions(); saveDraft();
   }
   function renderPositions(){
     const box=$('#positions'); box.innerHTML='';
     positions.forEach((p,i)=>{
       const row=document.createElement('div'); row.className='position-row'; row.dataset.id=p.id;
-      row.innerHTML=`<input class="pdesc" aria-label="Beschreibung" placeholder="Beschreibung / Leistung" value="${esc(p.description)}"><input class="pqty" aria-label="Menge" type="number" min="0" step="0.01" value="${p.qty}"><input class="pprice" aria-label="Einzelpreis" type="number" min="0" step="0.01" value="${p.price}"><div class="sum">${euro(p.qty*p.price)}</div><button class="iconbtn" title="Position löschen" aria-label="Position löschen">×</button>`;
+      row.innerHTML=`<input class="pdesc" aria-label="Beschreibung" placeholder="Beschreibung / Leistung" value="${esc(p.description)}"><input class="pqty" aria-label="Menge" type="number" min="0" step="0.01" value="${p.qty}"><input class="pprice" aria-label="Einzelpreis" type="number" min="0" step="0.01" value="${p.price}"><div class="sum">${euro(p.qty*p.price)}</div><button class="iconbtn" title="Position löschen" aria-label="Position löschen">×</button>${docType==='offer'?`<label class="optional-row"><input class="poptional" type="checkbox" ${p.optional?'checked':''}> Diese Position als optional kennzeichnen (nicht im Angebotspreis enthalten)</label>`:''}`;
       row.querySelector('.pdesc').addEventListener('input',e=>{p.description=e.target.value; updateAll();});
       row.querySelector('.pqty').addEventListener('input',e=>{p.qty=n(e.target.value); updateAll();});
       row.querySelector('.pprice').addEventListener('input',e=>{p.price=n(e.target.value); updateAll();});
+      row.querySelector('.poptional')?.addEventListener('change',e=>{p.optional=e.target.checked; updateAll();});
       row.querySelector('.iconbtn').onclick=()=>{positions.splice(i,1); if(!positions.length)addPosition(); else renderPositions(); updateAll();};
       box.appendChild(row);
     });
     updateTotals();
   }
-  function calc(){ const subtotal=positions.reduce((s,p)=>s+p.qty*p.price,0); const dv=n($('#discount').value); const discount=$('#discountType').value==='percent'?subtotal*Math.min(dv,100)/100:Math.min(dv,subtotal); const shipping=n($('#shipping').value); return {subtotal,discount,shipping,total:Math.max(0,subtotal-discount+shipping)}; }
+  function calc(){ const subtotal=positions.reduce((s,p)=>s+((docType==='offer'&&p.optional)?0:p.qty*p.price),0); const dv=n($('#discount').value); const discount=$('#discountType').value==='percent'?subtotal*Math.min(dv,100)/100:Math.min(dv,subtotal); const shipping=n($('#shipping').value); return {subtotal,discount,shipping,total:Math.max(0,subtotal-discount+shipping)}; }
   function updateTotals(){
     $$('.position-row').forEach((r,i)=>{if(positions[i])r.querySelector('.sum').textContent=euro(positions[i].qty*positions[i].price)});
     const c=calc(); $('#subtotal').textContent=euro(c.subtotal); $('#discountValue').textContent='- '+euro(c.discount); $('#shippingValue').textContent=euro(c.shipping); $('#grandTotal').textContent=euro(c.total);
@@ -302,9 +303,10 @@
     const docLabel=d.type==='invoice'?'Rechnungs-Nr.':'Angebots-Nr.';
     const priceLabel=d.type==='invoice'?'Rechnungspreis*':'Angebotspreis*';
     const customer=[d.customer.name,d.customer.street,d.customer.city,d.customer.contact?`Ansprechpartner: ${d.customer.contact}`:''].filter(Boolean).map(esc).join('<br>') || '<span style="color:#999">Kundendaten</span>';
-    const rows=d.positions.map((p,i)=>`<tr><td>${i+1}</td><td>${String(p.qty).replace('.',',')}</td><td>${esc(p.description)||'Position'}</td><td>${euro(p.price)}</td><td>${euro(p.qty*p.price)}</td></tr>`).join('');
+    const rows=d.positions.map((p,i)=>`<tr><td>${i+1}</td><td>${String(p.qty).replace('.',',')}</td><td>${esc(p.description)||'Position'}${d.type==='offer'&&p.optional?'<span class="optional-badge">OPTIONAL</span>':''}</td><td>${euro(p.price)}</td><td>${euro(p.qty*p.price)}</td></tr>`).join('');
     const tax=s.smallBusiness?`<div>*Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</div>`:'';
     const pay=d.type==='invoice'?`<div>${esc(d.paymentText)}</div>`:`<div>${esc(d.paymentText)}</div>`;
+    const optionalNote=d.type==='offer'&&d.positions.some(p=>p.optional)?'<div>Optionale Positionen sind nicht im Angebotspreis enthalten.</div>':'';
     const paypal=(s.showPaypal&&s.paypal)?`<div><strong>PayPal</strong>Zahlungen als „Waren und Dienstleistungen“<br>${esc(s.paypal)}</div>`:'<div></div>';
     $('#paperPreview').innerHTML=`
       <div class="paper-top"><div class="paper-brand">${esc(s.companyName)}</div><div class="paper-contact">${esc(s.ownerName)}<br>${esc(s.companyStreet)}<br>${esc(s.companyCity)}<br><b>E-Mail:</b> ${esc(s.companyEmail)}<br><b>Internet:</b> ${esc(s.companyWeb)}</div><div class="paper-logo"><img src="logo.png" alt="SW"></div></div>
@@ -314,7 +316,7 @@
       <div class="paper-docmeta"><span>${docLabel}</span><span>${esc(d.number)}</span></div>
       <table><thead><tr><th>Pos.</th><th>Menge</th><th>Bezeichnung</th><th>Einzelpreis</th><th>Gesamtpreis</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="paper-totalbar"><strong>${priceLabel}</strong><strong>${euro(d.totals.total)}</strong></div>
-      <div class="paper-notes">${tax}${pay}${d.closing?`<div style="margin-top:8px">${esc(d.closing).replace(/\n/g,'<br>')}</div>`:''}</div>
+      <div class="paper-notes">${tax}${optionalNote}${pay}${d.closing?`<div style="margin-top:8px">${esc(d.closing).replace(/\n/g,'<br>')}</div>`:''}</div>
       <div class="paper-bottom"><div><strong>Unternehmer</strong>${esc(s.ownerName)}</div>${paypal}<div><strong>${esc(s.bankName)}</strong>BIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${esc(s.bic)}<br>IBAN&nbsp;&nbsp;&nbsp;&nbsp;${esc(s.iban)}</div></div>`;
   }
 
@@ -368,7 +370,8 @@
       return y+h;
     }
     function tableRow(y,p,i){
-      const lines=wrap(p.description||'Position',8.5,mm(63));
+      const desc=(p.description||'Position')+((d.type==='offer'&&p.optional)?' [OPTIONAL]':'');
+      const lines=wrap(desc,8.5,mm(63));
       const h=Math.max(14,lines.length*4.2+5);
       line(cols[0],y,cols[5],y,.35); line(cols[0],y+h,cols[5],y+h,.35);
       for(const x of cols)line(x,y,x,y+h,.35);
@@ -383,7 +386,7 @@
     let pageNo=1, y=tableHeader(topHeader(pageNo,false));
     const bottomLimit=238;
     d.positions.forEach((p,i)=>{
-      const h=Math.max(14,wrap(p.description||'Position',8.5,mm(63)).length*4.2+5);
+      const h=Math.max(14,wrap((p.description||'Position')+((d.type==='offer'&&p.optional)?' [OPTIONAL]':''),8.5,mm(63)).length*4.2+5);
       if(y+h>bottomLimit){addPage();pageNo++;y=tableHeader(topHeader(pageNo,true));}
       y=tableRow(y,p,i);
     });
@@ -396,6 +399,7 @@
     text(euro(d.totals.total),188,y+6.3,9,false,'right');
     y+=17;
     if(s.smallBusiness){text('*Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.',20,y,8.5);y+=7}
+    if(d.type==='offer'&&d.positions.some(p=>p.optional)){text('Optionale Positionen sind nicht im Angebotspreis enthalten.',20,y,8.5);y+=7}
     const ptext=d.paymentText||'';
     wrap(ptext,8.5,mm(170)).forEach(ln=>{text(ln,20,y,8.5);y+=4.2});
     if(d.closing){y+=3;wrap(d.closing,8.5,mm(170)).forEach(ln=>{text(ln,20,y,8.5);y+=4.2})}
@@ -454,7 +458,7 @@ endstream`});
   function loadArchived(d,convert){
     setType(convert?'invoice':d.type,false); currentNumber=convert?suggestedNumber('invoice',todayISO()):d.number; $('#docDate').value=convert?todayISO():d.date; $('#serviceDate').value=d.serviceDate||$('#docDate').value; $('#subject').value=d.subject||'';
     $('#customerName').value=d.customer?.name||'';$('#customerContact').value=d.customer?.contact||'';$('#customerStreet').value=d.customer?.street||'';$('#customerCity').value=d.customer?.city||'';$('#customerEmail').value=d.customer?.email||'';$('#customerNo').value=d.customer?.no||'';
-    positions=(d.positions||[]).map(p=>({...p,id:crypto.randomUUID?.()||String(Math.random())})); if(!positions.length)addPosition(); $('#paypal').value=d.settings?.paypal??settings().paypal??''; $('#showPaypal').checked=!!(d.settings?.showPaypal); $('#discount').value=d.discount||0;$('#discountType').value=d.discountType||'percent';$('#shipping').value=d.shipping||0;$('#paymentDays').value=d.paymentDays??10;$('#paymentMode').value=d.paymentMode||'days';$('#validDays').value=d.validDays??14;$('#paymentText').value=convert?'':(d.paymentText||'');$('#introText').value=d.intro||'';$('#closingText').value=d.closing||'';$('#internalNote').value=d.internalNote||'';
+    positions=(d.positions||[]).map(p=>({...p,optional:!!p.optional,id:crypto.randomUUID?.()||String(Math.random())})); if(!positions.length)addPosition(); $('#paypal').value=d.settings?.paypal??settings().paypal??''; $('#showPaypal').checked=!!(d.settings?.showPaypal); $('#discount').value=d.discount||0;$('#discountType').value=d.discountType||'percent';$('#shipping').value=d.shipping||0;$('#paymentDays').value=d.paymentDays??10;$('#paymentMode').value=d.paymentMode||'days';$('#validDays').value=d.validDays??14;$('#paymentText').value=convert?'':(d.paymentText||'');$('#introText').value=d.intro||'';$('#closingText').value=d.closing||'';$('#internalNote').value=d.internalNote||'';
     renderPositions(); refreshNumber(); updateAll(); switchTab('document'); toast(convert?'Angebot in neue Rechnung übernommen':'Dokument geladen');
   }
 
@@ -466,7 +470,7 @@ endstream`});
   function loadSettings(){ const s=settings(); Object.entries(s).forEach(([k,v])=>{const el=$('#'+k);if(!el)return;if(el.type==='checkbox')el.checked=!!v;else el.value=v??''}); }
   function saveSettings(){ const existing=settings(), s={}; Object.keys(defaultSettings).forEach(k=>{const el=$('#'+k);s[k]=el? (el.type==='checkbox'?el.checked:el.value) : existing[k]}); localStorage.setItem(STORAGE.settings,JSON.stringify(s)); preview();toast('Einstellungen gespeichert'); }
 
-  function setType(type,resetNumber=true){docType=type;$('#typeInvoice').classList.toggle('active',type==='invoice');$('#typeOffer').classList.toggle('active',type==='offer');if(resetNumber)currentNumber=suggestedNumber(type,$('#docDate').value);refreshNumber();updateAll();}
+  function setType(type,resetNumber=true){docType=type;$('#typeInvoice').classList.toggle('active',type==='invoice');$('#typeOffer').classList.toggle('active',type==='offer');if(resetNumber)currentNumber=suggestedNumber(type,$('#docDate').value);refreshNumber();renderPositions();updateAll();}
   function switchTab(name){ $$('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name)); $$('.panel').forEach(x=>x.classList.remove('active')); $('#'+name+'Panel').classList.add('active'); if(name==='preview')preview(); if(name==='archive')renderArchive(); }
   function updateAll(){updateTotals();refreshNumber();preview();saveDraft();}
   function newDocument(){
@@ -481,7 +485,7 @@ endstream`});
   ['docDate','serviceDate','subject','customerName','customerContact','customerStreet','customerCity','customerEmail','customerNo','paymentDays','paymentMode','validDays','paymentText','discount','discountType','shipping','introText','closingText','internalNote','paypal','showPaypal'].forEach(id=>$('#'+id).addEventListener('input',()=>{updateAll()}));
 
   loadSettings(); const hadDraft=loadDraft(); if(!$('#docDate').value)$('#docDate').value=todayISO();if(!$('#serviceDate').value)$('#serviceDate').value=todayISO();if(!hadDraft){const st=settings();$('#paypal').value=st.paypal||'';$('#showPaypal').checked=!!st.showPaypal;$('#introText').value='Vielen Dank für Ihren Auftrag. Für die ausgeführten Leistungen berechne ich wie folgt:';$('#paymentDays').value=10;$('#validDays').value=14;}
-  if(!positions.length)positions=[{id:crypto.randomUUID?.()||'p1',description:'',qty:1,price:0}]; setType(docType,false);renderPositions();refreshNumber();renderArchive();preview();
+  if(!positions.length)positions=[{id:crypto.randomUUID?.()||'p1',description:'',qty:1,price:0,optional:false}]; setType(docType,false);renderPositions();refreshNumber();renderArchive();preview();
 })();
 </script>
 </body>
